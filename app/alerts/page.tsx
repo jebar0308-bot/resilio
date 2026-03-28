@@ -1,106 +1,174 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
-type Contract = {
-  id: string
-  category: string
-  provider: string
-  monthly_price: number
-  renewal_date: string
-}
+export default function Contracts() {
+  const [name, setName] = useState('')
+  const [provider, setProvider] = useState('')
+  const [price, setPrice] = useState('')
+  const [date, setDate] = useState('')
 
-function getDaysUntil(dateString: string) {
-  const today = new Date()
-  const target = new Date(dateString)
-  const diff = target.getTime() - today.getTime()
-  return Math.ceil(diff / (1000 * 60 * 60 * 24))
-}
+  const handleAdd = async () => {
+    const user = (await supabase.auth.getUser()).data.user
 
-function getStatus(days: number) {
-  if (days <= 30) return 'À optimiser'
-  if (days <= 90) return 'À surveiller'
-  return 'OK'
-}
-
-export default function AlertsPage() {
-  const [contracts, setContracts] = useState<Contract[]>([])
-
-  useEffect(() => {
-    const fetchAlerts = async () => {
-      const userRes = await supabase.auth.getUser()
-      const user = userRes.data.user
-
-      if (!user) return
-
-      const { data, error } = await supabase
-        .from('contracts')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('renewal_date', { ascending: true })
-
-      if (!error) {
-        setContracts(data || [])
-      }
+    if (!user) {
+      alert("Vous n'êtes pas connecté")
+      return
     }
 
-    fetchAlerts()
-  }, [])
+    const { error } = await supabase.from('contracts').insert({
+      user_id: user.id,
+      category: name,
+      provider,
+      monthly_price: Number(price),
+      renewal_date: date,
+    })
 
-  const urgent = contracts.filter((c) => getDaysUntil(c.renewal_date) <= 30)
-  const watch = contracts.filter((c) => {
-    const days = getDaysUntil(c.renewal_date)
-    return days > 30 && days <= 90
-  })
+    if (error) {
+      alert(error.message)
+    } else {
+      alert('Contrat ajouté !')
+      window.location.href = '/'
+    }
+  }
 
   return (
-    <div style={{ maxWidth: 520, margin: '0 auto', padding: 20, fontFamily: 'Arial, sans-serif' }}>
-      <a href="/" style={{ textDecoration: 'none', color: '#666' }}>
-        ← Retour
-      </a>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
+        padding: 20,
+        fontFamily: '-apple-system, BlinkMacSystemFont, Arial, sans-serif',
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 520,
+          margin: '0 auto',
+        }}
+      >
+        <a href="/" style={backLinkStyle}>
+          ← Retour
+        </a>
 
-      <h1 style={{ marginTop: 10 }}>Alertes</h1>
+        <div style={{ marginTop: 12, marginBottom: 20 }}>
+          <p style={{ color: '#6b7280', marginBottom: 6 }}>Nouveau contrat</p>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: 32,
+              lineHeight: 1.05,
+            }}
+          >
+            Ajouter un contrat
+          </h1>
+        </div>
 
-      <div style={{ marginTop: 20 }}>
-        <h2>Urgent</h2>
-        {urgent.length === 0 ? (
-          <p style={{ color: '#666' }}>Aucune alerte urgente.</p>
-        ) : (
-          urgent.map((contract) => (
-            <div key={contract.id} style={cardStyle}>
-              <h3 style={{ margin: 0 }}>{contract.category}</h3>
-              <p style={{ color: '#666' }}>{contract.provider}</p>
-              <p><strong>{getStatus(getDaysUntil(contract.renewal_date))}</strong></p>
-              <a href={`/compare/${contract.id}`}>Voir les offres</a>
-            </div>
-          ))
-        )}
-      </div>
+        <div style={formCardStyle}>
+          <div style={{ marginBottom: 16 }}>
+            <p style={labelStyle}>Type de contrat</p>
+            <input
+              placeholder="Assurance auto"
+              onChange={(e) => setName(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
 
-      <div style={{ marginTop: 30 }}>
-        <h2>À surveiller</h2>
-        {watch.length === 0 ? (
-          <p style={{ color: '#666' }}>Aucune alerte à surveiller.</p>
-        ) : (
-          watch.map((contract) => (
-            <div key={contract.id} style={cardStyle}>
-              <h3 style={{ margin: 0 }}>{contract.category}</h3>
-              <p style={{ color: '#666' }}>{contract.provider}</p>
-              <p><strong>{getStatus(getDaysUntil(contract.renewal_date))}</strong></p>
-              <a href={`/compare/${contract.id}`}>Voir les offres</a>
-            </div>
-          ))
-        )}
+          <div style={{ marginBottom: 16 }}>
+            <p style={labelStyle}>Fournisseur</p>
+            <input
+              placeholder="AXA, Orange..."
+              onChange={(e) => setProvider(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <p style={labelStyle}>Prix mensuel</p>
+            <input
+              placeholder="50"
+              onChange={(e) => setPrice(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <p style={labelStyle}>Date anniversaire</p>
+            <input
+              type="date"
+              onChange={(e) => setDate(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          <div style={hintCardStyle}>
+            <p style={{ margin: 0, fontWeight: 600 }}>Surveillance automatique</p>
+            <p style={{ margin: '8px 0 0', color: '#6b7280' }}>
+              L’app vous préviendra au bon moment pour comparer et économiser.
+            </p>
+          </div>
+
+          <button onClick={handleAdd} style={primaryButtonStyle}>
+            Ajouter le contrat
+          </button>
+        </div>
       </div>
     </div>
   )
 }
 
-const cardStyle: React.CSSProperties = {
-  background: '#fff',
-  border: '1px solid #e5e7eb',
+const backLinkStyle: React.CSSProperties = {
+  textDecoration: 'none',
+  color: '#6b7280',
+  display: 'inline-block',
+}
+
+const formCardStyle: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.72)',
+  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(18px)',
+  border: '1px solid rgba(255,255,255,0.7)',
+  borderRadius: 28,
+  padding: 24,
+  boxShadow: '0 12px 40px rgba(0,0,0,0.08)',
+}
+
+const labelStyle: React.CSSProperties = {
+  marginBottom: 8,
+  fontSize: 14,
+  color: '#6b7280',
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '13px 14px',
   borderRadius: 16,
+  border: '1px solid #e5e7eb',
+  background: 'rgba(255,255,255,0.9)',
+  fontSize: 14,
+  outline: 'none',
+  boxSizing: 'border-box',
+}
+
+const hintCardStyle: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.85)',
+  border: '1px solid #e5e7eb',
+  borderRadius: 20,
   padding: 16,
-  marginBottom: 12,
+  marginTop: 8,
+  marginBottom: 18,
+}
+
+const primaryButtonStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '15px',
+  borderRadius: 16,
+  border: 'none',
+  background: '#111827',
+  color: 'white',
+  fontWeight: 700,
+  fontSize: 16,
+  cursor: 'pointer',
+  boxShadow: '0 8px 20px rgba(17,24,39,0.18)',
 }
