@@ -10,28 +10,27 @@ export default function Contracts() {
   const [date, setDate] = useState('')
 
   const handleAdd = async () => {
-const handleAdd = async () => {
-  const user = (await supabase.auth.getUser()).data.user
+    const user = (await supabase.auth.getUser()).data.user
 
-  if (!user) {
-    alert("Vous n'êtes pas connecté")
-    return
+    if (!user) {
+      alert("Vous n'êtes pas connecté")
+      return
+    }
+
+    const { error } = await supabase.from('contracts').insert({
+      user_id: user.id,
+      category: name,
+      provider,
+      monthly_price: Number(price),
+      renewal_date: date,
+    })
+
+    if (error) {
+      alert(error.message)
+    } else {
+      alert('Contrat ajouté !')
+    }
   }
-
-  const { error } = await supabase.from('contracts').insert({
-    category: name,
-    provider,
-    monthly_price: Number(price),
-    renewal_date: date,
-    user_id: user.id,
-  })
-
-  if (error) {
-    alert(error.message)
-  } else {
-    alert('Contrat ajouté !')
-  }
-}
 
   return (
     <div
@@ -124,7 +123,7 @@ const handleAdd = async () => {
   )
 }
 
-const inputStyle = {
+const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '12px',
   borderRadius: 12,
