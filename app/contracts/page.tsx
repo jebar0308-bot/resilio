@@ -10,14 +10,20 @@ export default function Contracts() {
   const [date, setDate] = useState('')
 
   const handleAdd = async () => {
+const handleAdd = async () => {
   const user = (await supabase.auth.getUser()).data.user
+
+  if (!user) {
+    alert("Vous n'êtes pas connecté")
+    return
+  }
 
   const { error } = await supabase.from('contracts').insert({
     category: name,
     provider,
     monthly_price: Number(price),
     renewal_date: date,
-    user_id: user?.id,
+    user_id: user.id,
   })
 
   if (error) {
