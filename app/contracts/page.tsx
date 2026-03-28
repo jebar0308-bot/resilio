@@ -10,23 +10,22 @@ export default function Contracts() {
   const [date, setDate] = useState('')
 
   const handleAdd = async () => {
-    const user = await supabase.auth.getUser()
-    const userId = user.data.user?.id
+  const user = (await supabase.auth.getUser()).data.user
 
-    const { error } = await supabase.from('contracts').insert({
-      user_id: userId,
-      category: name,
-      provider,
-      monthly_price: Number(price),
-      renewal_date: date,
-    })
+  const { error } = await supabase.from('contracts').insert({
+    category: name,
+    provider,
+    monthly_price: Number(price),
+    renewal_date: date,
+    user_id: user?.id,
+  })
 
-    if (error) {
-      alert(error.message)
-    } else {
-      alert('Contrat ajouté !')
-    }
+  if (error) {
+    alert(error.message)
+  } else {
+    alert('Contrat ajouté !')
   }
+}
 
   return (
     <div
