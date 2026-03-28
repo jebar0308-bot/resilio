@@ -200,11 +200,13 @@ const offerCardStyle: React.CSSProperties = {
 
 const badgeStyle: React.CSSProperties = {
   display: 'inline-block',
-  padding: '6px 10px',
+  padding: '7px 11px',
   borderRadius: 999,
-  background: 'rgba(255,255,255,0.85)',
+  background: 'rgba(255,255,255,0.88)',
   fontSize: 12,
-  fontWeight: 700,
+  fontWeight: 800,
+  letterSpacing: '-0.01em',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.45)',
 }
 
 const statsGridStyle: React.CSSProperties = {
@@ -236,13 +238,14 @@ const miniValueStyle: React.CSSProperties = {
 const primaryButtonStyle: React.CSSProperties = {
   width: '100%',
   marginTop: 18,
-  padding: '15px',
-  borderRadius: 16,
-  border: 'none',
-  background: '#111827',
+  padding: '16px',
+  borderRadius: 18,
+  border: '1px solid rgba(15,23,42,0.06)',
+  background: 'linear-gradient(180deg, #111827 0%, #0f172a 100%)',
   color: 'white',
   fontWeight: 700,
   fontSize: 16,
   cursor: 'pointer',
-  boxShadow: '0 8px 20px rgba(17,24,39,0.18)',
+  letterSpacing: '-0.01em',
+  boxShadow: '0 12px 28px rgba(15,23,42,0.22)',
 }

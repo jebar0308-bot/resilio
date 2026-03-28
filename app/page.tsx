@@ -262,14 +262,19 @@ export default function Home() {
         </div>
 
         <a
-          href="/contracts"
-          style={{
-            display: 'inline-block',
-            marginBottom: 20,
-            textDecoration: 'none',
-            color: '#111827',
-            fontWeight: 600,
-          }}
+      href={`/compare/${nextAction.id}`}
+  style={{
+    display: 'inline-block',
+    marginTop: 18,
+    background: 'linear-gradient(180deg, #111827 0%, #0f172a 100%)',
+    color: 'white',
+    textDecoration: 'none',
+    padding: '14px 20px',
+    borderRadius: 18,
+    fontWeight: 700,
+    letterSpacing: '-0.01em',
+    boxShadow: '0 12px 28px rgba(15,23,42,0.22)',
+  }}
         >
           + Ajouter un contrat
         </a>
@@ -335,17 +340,19 @@ export default function Home() {
                       </div>
 
                       <span
-                        style={{
-                          background: statusStyle.background,
-                          color: statusStyle.color,
-                          borderRadius: 999,
-                          padding: '7px 11px',
-                          fontSize: 12,
-                          fontWeight: 700,
-                        }}
-                      >
-                        {status}
-                      </span>
+  style={{
+    background: statusStyle.background,
+    color: statusStyle.color,
+    borderRadius: 999,
+    padding: '8px 12px',
+    fontSize: 12,
+    fontWeight: 800,
+    letterSpacing: '-0.01em',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.45)',
+  }}
+>
+  {status}
+</span>
                     </div>
 
                     <div
@@ -384,14 +391,15 @@ export default function Home() {
 
 const smallButtonStyle: React.CSSProperties = {
   border: '1px solid rgba(255,255,255,0.7)',
-  background: 'rgba(255,255,255,0.72)',
+  background: 'rgba(255,255,255,0.78)',
   backdropFilter: 'blur(18px)',
   WebkitBackdropFilter: 'blur(18px)',
-  color: '#111827',
-  borderRadius: 14,
-  padding: '10px 13px',
-  fontWeight: 600,
+  color: '#0f172a',
+  borderRadius: 16,
+  padding: '11px 14px',
+  fontWeight: 700,
   cursor: 'pointer',
+  boxShadow: '0 8px 18px rgba(15,23,42,0.06)',
 }
 
 const statCardStyle: React.CSSProperties = {
