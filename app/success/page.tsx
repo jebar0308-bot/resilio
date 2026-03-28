@@ -1,8 +1,9 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
 
   const contract = searchParams.get('contract')
@@ -44,6 +45,14 @@ export default function SuccessPage() {
         </button>
       </a>
     </div>
+  )
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 20 }}>Chargement...</div>}>
+      <SuccessContent />
+    </Suspense>
   )
 }
 
