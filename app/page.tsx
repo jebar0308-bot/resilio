@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 type Contract = {
@@ -62,30 +62,50 @@ function formatDate(dateString: string) {
 export default function Home() {
   const [contracts, setContracts] = useState<Contract[]>([])
   const [loggedIn, setLoggedIn] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchAll = async () => {
-      const userRes = await supabase.auth.getUser()
-      const user = userRes.data.user
+      try {
+        const userRes = await supabase.auth.getUser()
+        const user = userRes.data.user
 
-      if (!user) {
-        setLoggedIn(false)
+        if (!user) {
+          setLoggedIn(false)
+          setContracts([])
+          setLoading(false)
+          return
+        }
+
+        setLoggedIn(true)
+
+        const { data, error } = await supabase
+          .from('contracts')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('renewal_date', { ascending: true })
+
+        if (error) {
+          console.error(error)
+          setContracts([])
+        } else {
+          const safeContracts = (data || []).filter(
+            (item): item is Contract =>
+              !!item &&
+              typeof item.id === 'string' &&
+              typeof item.category === 'string' &&
+              typeof item.provider === 'string' &&
+              typeof item.monthly_price === 'number' &&
+              typeof item.renewal_date === 'string'
+          )
+
+          setContracts(safeContracts)
+        }
+      } catch (err) {
+        console.error(err)
         setContracts([])
-        return
-      }
-
-      setLoggedIn(true)
-
-      const { data, error } = await supabase
-        .from('contracts')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('renewal_date', { ascending: true })
-
-      if (error) {
-        console.error(error)
-      } else {
-        setContracts(data || [])
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -97,13 +117,21 @@ export default function Home() {
     window.location.href = '/login'
   }
 
-  const totalSaving = contracts.reduce((sum, contract) => {
-    return sum + getEstimatedSaving(contract.monthly_price)
-  }, 0)
+  const totalSaving = useMemo(() => {
+    return contracts.reduce((sum, contract) => {
+      return sum + getEstimatedSaving(contract.monthly_price)
+    }, 0)
+  }, [contracts])
 
-  const nextAction = [...contracts].sort((a, b) => {
-    return getDaysUntil(a.renewal_date) - getDaysUntil(b.renewal_date)
-  })[0]
+  const nextAction = useMemo(() => {
+    if (!contracts.length) return null
+
+    const sorted = [...contracts].sort((a, b) => {
+      return getDaysUntil(a.renewal_date) - getDaysUntil(b.renewal_date)
+    })
+
+    return sorted[0] ?? null
+  }, [contracts])
 
   return (
     <div
@@ -206,7 +234,7 @@ export default function Home() {
               lineHeight: 1,
             }}
           >
-            {totalSaving}€/an
+            {loading ? '...' : `${totalSaving}€/an`}
           </h2>
 
           <p style={{ color: '#6b7280', margin: 0 }}>
@@ -215,24 +243,25 @@ export default function Home() {
               : 'Ajoutez votre premier contrat'}
           </p>
 
-          {nextAction && (
+          {nextAction && nextAction.id ? (
             <a
               href={`/compare/${nextAction.id}`}
               style={{
                 display: 'inline-block',
                 marginTop: 18,
-                background: '#111827',
+                background: 'linear-gradient(180deg, #111827 0%, #0f172a 100%)',
                 color: 'white',
                 textDecoration: 'none',
-                padding: '13px 18px',
-                borderRadius: 16,
-                fontWeight: 600,
-                boxShadow: '0 8px 20px rgba(17,24,39,0.18)',
+                padding: '14px 20px',
+                borderRadius: 18,
+                fontWeight: 700,
+                letterSpacing: '-0.01em',
+                boxShadow: '0 12px 28px rgba(15,23,42,0.22)',
               }}
             >
               Voir comment
             </a>
-          )}
+          ) : null}
         </div>
 
         <div
@@ -262,19 +291,14 @@ export default function Home() {
         </div>
 
         <a
-      href={`/compare/${nextAction.id}`}
-  style={{
-    display: 'inline-block',
-    marginTop: 18,
-    background: 'linear-gradient(180deg, #111827 0%, #0f172a 100%)',
-    color: 'white',
-    textDecoration: 'none',
-    padding: '14px 20px',
-    borderRadius: 18,
-    fontWeight: 700,
-    letterSpacing: '-0.01em',
-    boxShadow: '0 12px 28px rgba(15,23,42,0.22)',
-  }}
+          href="/contracts"
+          style={{
+            display: 'inline-block',
+            marginBottom: 20,
+            textDecoration: 'none',
+            color: '#111827',
+            fontWeight: 600,
+          }}
         >
           + Ajouter un contrat
         </a>
@@ -297,6 +321,8 @@ export default function Home() {
             </div>
           ) : (
             contracts.map((contract) => {
+              if (!contract?.id) return null
+
               const days = getDaysUntil(contract.renewal_date)
               const status = getStatus(days)
               const statusStyle = getStatusStyles(days)
@@ -340,19 +366,19 @@ export default function Home() {
                       </div>
 
                       <span
-  style={{
-    background: statusStyle.background,
-    color: statusStyle.color,
-    borderRadius: 999,
-    padding: '8px 12px',
-    fontSize: 12,
-    fontWeight: 800,
-    letterSpacing: '-0.01em',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.45)',
-  }}
->
-  {status}
-</span>
+                        style={{
+                          background: statusStyle.background,
+                          color: statusStyle.color,
+                          borderRadius: 999,
+                          padding: '8px 12px',
+                          fontSize: 12,
+                          fontWeight: 800,
+                          letterSpacing: '-0.01em',
+                          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.45)',
+                        }}
+                      >
+                        {status}
+                      </span>
                     </div>
 
                     <div
