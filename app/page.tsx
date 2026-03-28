@@ -9,6 +9,7 @@ type Contract = {
   provider: string
   monthly_price: number
   renewal_date: string
+  user_id?: string
 }
 
 function getDaysUntil(dateString: string) {
@@ -24,14 +25,38 @@ function getStatus(days: number) {
   return 'OK'
 }
 
-function getStatusColor(days: number) {
-  if (days <= 30) return '#ffe4e6'
-  if (days <= 90) return '#fef3c7'
-  return '#dcfce7'
+function getStatusStyles(days: number) {
+  if (days <= 30) {
+    return {
+      background: '#fee2e2',
+      color: '#991b1b',
+    }
+  }
+
+  if (days <= 90) {
+    return {
+      background: '#fef3c7',
+      color: '#92400e',
+    }
+  }
+
+  return {
+    background: '#dcfce7',
+    color: '#166534',
+  }
 }
 
 function getEstimatedSaving(monthlyPrice: number) {
   return Math.round(monthlyPrice * 2.5)
+}
+
+function formatDate(dateString: string) {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 export default function Home() {
@@ -69,7 +94,6 @@ export default function Home() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    alert('Déconnecté')
     window.location.href = '/login'
   }
 
@@ -84,236 +108,321 @@ export default function Home() {
   return (
     <div
       style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
         padding: 20,
-        maxWidth: 520,
-        margin: '0 auto',
-        fontFamily: 'Arial, sans-serif',
+        fontFamily: '-apple-system, BlinkMacSystemFont, Arial, sans-serif',
       }}
     >
-      <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          <p style={{ color: '#666', marginBottom: 6 }}>Votre copilote d’économies</p>
-          <h1 style={{ margin: 0, fontSize: 32 }}>Bonjour 👋</h1>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
-          {loggedIn ? (
-            <button onClick={handleLogout} style={smallButtonStyle}>
-              Déconnexion
-            </button>
-          ) : (
-            <a href="/login" style={{ ...smallButtonStyle, textDecoration: 'none', display: 'inline-block' }}>
-              Connexion
-            </a>
-          )}
-
-          <a href="/alerts" style={{ ...smallButtonStyle, textDecoration: 'none', display: 'inline-block' }}>
-            Alertes
-          </a>
-        </div>
-      </div>
-
       <div
         style={{
-          background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
-          border: '1px solid #e5e7eb',
-          borderRadius: 20,
-          padding: 22,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
-          marginBottom: 18,
+          maxWidth: 520,
+          margin: '0 auto',
         }}
       >
-        <p style={{ margin: 0, color: '#666', fontSize: 14 }}>Économie potentielle</p>
-        <h2 style={{ marginTop: 10, marginBottom: 8, fontSize: 36 }}>
-          {totalSaving}€/an
-        </h2>
-        <p style={{ color: '#666', margin: 0 }}>
-          {nextAction
-            ? `Prochaine action : optimiser ${nextAction.category.toLowerCase()}`
-            : 'Ajoutez votre premier contrat'}
-        </p>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 12,
+            alignItems: 'flex-start',
+            marginBottom: 20,
+          }}
+        >
+          <div>
+            <p style={{ color: '#6b7280', marginBottom: 6 }}>
+              Votre copilote d’économies
+            </p>
+            <h1
+              style={{
+                margin: 0,
+                fontSize: 32,
+                lineHeight: 1.05,
+              }}
+            >
+              Bonjour 👋
+            </h1>
+          </div>
 
-        {nextAction && (
-          <a
-            href={`/compare/${nextAction.id}`}
-            style={{
-              display: 'inline-block',
-              marginTop: 16,
-              background: '#111827',
-              color: 'white',
-              textDecoration: 'none',
-              padding: '12px 16px',
-              borderRadius: 12,
-              fontWeight: 600,
-            }}
-          >
-            Voir comment
-          </a>
-        )}
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 12,
-          marginBottom: 20,
-        }}
-      >
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Contrats</p>
-          <p style={statValueStyle}>{contracts.length}</p>
-        </div>
-
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Alertes</p>
-          <p style={statValueStyle}>
-            {contracts.filter((c) => getDaysUntil(c.renewal_date) <= 90).length}
-          </p>
-        </div>
-
-        <div style={statCardStyle}>
-          <p style={statLabelStyle}>Suivi</p>
-          <p style={statValueStyle}>Actif</p>
-        </div>
-      </div>
-
-      <a
-        href="/contracts"
-        style={{
-          display: 'inline-block',
-          marginBottom: 20,
-          textDecoration: 'none',
-          color: '#111827',
-          fontWeight: 600,
-        }}
-      >
-        + Ajouter un contrat
-      </a>
-
-      <div style={{ display: 'grid', gap: 12 }}>
-        {contracts.length === 0 ? (
           <div
             style={{
-              background: '#fff',
-              border: '1px solid #e5e7eb',
-              borderRadius: 16,
-              padding: 20,
-              color: '#666',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              alignItems: 'flex-end',
             }}
           >
-            Aucun contrat pour le moment.
-          </div>
-        ) : (
-          contracts.map((contract) => {
-            const days = getDaysUntil(contract.renewal_date)
-            const status = getStatus(days)
-            const saving = getEstimatedSaving(contract.monthly_price)
-
-            return (
+            {loggedIn ? (
+              <button onClick={handleLogout} style={smallButtonStyle}>
+                Déconnexion
+              </button>
+            ) : (
               <a
-                key={contract.id}
-                href={`/compare/${contract.id}`}
+                href="/login"
                 style={{
+                  ...smallButtonStyle,
                   textDecoration: 'none',
-                  color: 'inherit',
+                  display: 'inline-block',
                 }}
               >
-                <div
+                Connexion
+              </a>
+            )}
+
+            <a
+              href="/alerts"
+              style={{
+                ...smallButtonStyle,
+                textDecoration: 'none',
+                display: 'inline-block',
+              }}
+            >
+              Alertes
+            </a>
+          </div>
+        </div>
+
+        <div
+          style={{
+            background: 'rgba(255,255,255,0.72)',
+            backdropFilter: 'blur(18px)',
+            WebkitBackdropFilter: 'blur(18px)',
+            border: '1px solid rgba(255,255,255,0.7)',
+            borderRadius: 28,
+            padding: 24,
+            boxShadow: '0 12px 40px rgba(0,0,0,0.08)',
+            marginBottom: 18,
+          }}
+        >
+          <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>
+            Économie potentielle
+          </p>
+
+          <h2
+            style={{
+              marginTop: 10,
+              marginBottom: 8,
+              fontSize: 42,
+              lineHeight: 1,
+            }}
+          >
+            {totalSaving}€/an
+          </h2>
+
+          <p style={{ color: '#6b7280', margin: 0 }}>
+            {nextAction
+              ? `Prochaine action : optimiser ${nextAction.category.toLowerCase()}`
+              : 'Ajoutez votre premier contrat'}
+          </p>
+
+          {nextAction && (
+            <a
+              href={`/compare/${nextAction.id}`}
+              style={{
+                display: 'inline-block',
+                marginTop: 18,
+                background: '#111827',
+                color: 'white',
+                textDecoration: 'none',
+                padding: '13px 18px',
+                borderRadius: 16,
+                fontWeight: 600,
+                boxShadow: '0 8px 20px rgba(17,24,39,0.18)',
+              }}
+            >
+              Voir comment
+            </a>
+          )}
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 12,
+            marginBottom: 20,
+          }}
+        >
+          <div style={statCardStyle}>
+            <p style={statLabelStyle}>Contrats</p>
+            <p style={statValueStyle}>{contracts.length}</p>
+          </div>
+
+          <div style={statCardStyle}>
+            <p style={statLabelStyle}>Alertes</p>
+            <p style={statValueStyle}>
+              {contracts.filter((c) => getDaysUntil(c.renewal_date) <= 90).length}
+            </p>
+          </div>
+
+          <div style={statCardStyle}>
+            <p style={statLabelStyle}>Suivi</p>
+            <p style={statValueStyle}>Actif</p>
+          </div>
+        </div>
+
+        <a
+          href="/contracts"
+          style={{
+            display: 'inline-block',
+            marginBottom: 20,
+            textDecoration: 'none',
+            color: '#111827',
+            fontWeight: 600,
+          }}
+        >
+          + Ajouter un contrat
+        </a>
+
+        <div style={{ display: 'grid', gap: 14 }}>
+          {contracts.length === 0 ? (
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.72)',
+                backdropFilter: 'blur(18px)',
+                WebkitBackdropFilter: 'blur(18px)',
+                border: '1px solid rgba(255,255,255,0.7)',
+                borderRadius: 24,
+                padding: 20,
+                color: '#6b7280',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.05)',
+              }}
+            >
+              Aucun contrat pour le moment.
+            </div>
+          ) : (
+            contracts.map((contract) => {
+              const days = getDaysUntil(contract.renewal_date)
+              const status = getStatus(days)
+              const statusStyle = getStatusStyles(days)
+              const saving = getEstimatedSaving(contract.monthly_price)
+
+              return (
+                <a
+                  key={contract.id}
+                  href={`/compare/${contract.id}`}
                   style={{
-                    background: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: 18,
-                    padding: 18,
-                    boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
+                    textDecoration: 'none',
+                    color: 'inherit',
                   }}
                 >
                   <div
                     style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      alignItems: 'start',
+                      background: 'rgba(255,255,255,0.72)',
+                      backdropFilter: 'blur(18px)',
+                      WebkitBackdropFilter: 'blur(18px)',
+                      border: '1px solid rgba(255,255,255,0.7)',
+                      borderRadius: 24,
+                      padding: 20,
+                      boxShadow: '0 10px 28px rgba(0,0,0,0.06)',
                     }}
                   >
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: 18 }}>{contract.category}</h3>
-                      <p style={{ margin: '8px 0 0', color: '#666' }}>
-                        {contract.provider} · {contract.monthly_price}€/mois
-                      </p>
-                    </div>
-
-                    <span
+                    <div
                       style={{
-                        background: getStatusColor(days),
-                        borderRadius: 999,
-                        padding: '6px 10px',
-                        fontSize: 12,
-                        fontWeight: 600,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        alignItems: 'flex-start',
                       }}
                     >
-                      {status}
-                    </span>
-                  </div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: 19 }}>
+                          {contract.category}
+                        </h3>
+                        <p style={{ margin: '8px 0 0', color: '#6b7280' }}>
+                          {contract.provider} · {contract.monthly_price}€/mois
+                        </p>
+                      </div>
 
-                  <div
-                    style={{
-                      marginTop: 14,
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gap: 10,
-                    }}
-                  >
-                    <div>
-                      <p style={{ margin: 0, color: '#666', fontSize: 12 }}>Date</p>
-                      <p style={{ margin: '6px 0 0', fontWeight: 600 }}>
-                        {contract.renewal_date}
-                      </p>
+                      <span
+                        style={{
+                          background: statusStyle.background,
+                          color: statusStyle.color,
+                          borderRadius: 999,
+                          padding: '7px 11px',
+                          fontSize: 12,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {status}
+                      </span>
                     </div>
-                    <div>
-                      <p style={{ margin: 0, color: '#666', fontSize: 12 }}>Dans</p>
-                      <p style={{ margin: '6px 0 0', fontWeight: 600 }}>{days} jours</p>
-                    </div>
-                    <div>
-                      <p style={{ margin: 0, color: '#666', fontSize: 12 }}>Économie</p>
-                      <p style={{ margin: '6px 0 0', fontWeight: 600 }}>{saving}€/an</p>
+
+                    <div
+                      style={{
+                        marginTop: 16,
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: 12,
+                      }}
+                    >
+                      <div>
+                        <p style={miniLabelStyle}>Date</p>
+                        <p style={miniValueStyle}>{formatDate(contract.renewal_date)}</p>
+                      </div>
+
+                      <div>
+                        <p style={miniLabelStyle}>Dans</p>
+                        <p style={miniValueStyle}>{days} jours</p>
+                      </div>
+
+                      <div>
+                        <p style={miniLabelStyle}>Économie</p>
+                        <p style={miniValueStyle}>{saving}€/an</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </a>
-            )
-          })
-        )}
+                </a>
+              )
+            })
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
 const smallButtonStyle: React.CSSProperties = {
-  border: '1px solid #e5e7eb',
-  background: '#fff',
+  border: '1px solid rgba(255,255,255,0.7)',
+  background: 'rgba(255,255,255,0.72)',
+  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(18px)',
   color: '#111827',
-  borderRadius: 12,
-  padding: '10px 12px',
+  borderRadius: 14,
+  padding: '10px 13px',
   fontWeight: 600,
   cursor: 'pointer',
 }
 
 const statCardStyle: React.CSSProperties = {
-  background: '#fff',
-  border: '1px solid #e5e7eb',
-  borderRadius: 16,
+  background: 'rgba(255,255,255,0.72)',
+  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(18px)',
+  border: '1px solid rgba(255,255,255,0.7)',
+  borderRadius: 20,
   padding: 14,
+  boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
 }
 
 const statLabelStyle: React.CSSProperties = {
   margin: 0,
-  color: '#666',
+  color: '#6b7280',
   fontSize: 12,
 }
 
 const statValueStyle: React.CSSProperties = {
   margin: '8px 0 0',
-  fontSize: 22,
+  fontSize: 24,
+  fontWeight: 700,
+}
+
+const miniLabelStyle: React.CSSProperties = {
+  margin: 0,
+  color: '#6b7280',
+  fontSize: 12,
+}
+
+const miniValueStyle: React.CSSProperties = {
+  margin: '6px 0 0',
   fontWeight: 700,
 }
