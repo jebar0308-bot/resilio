@@ -36,12 +36,25 @@ function getEstimatedSaving(monthlyPrice: number) {
 
 export default function Home() {
   const [contracts, setContracts] = useState<Contract[]>([])
+  const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
-    const fetchContracts = async () => {
+    const fetchAll = async () => {
+      const userRes = await supabase.auth.getUser()
+      const user = userRes.data.user
+
+      if (!user) {
+        setLoggedIn(false)
+        setContracts([])
+        return
+      }
+
+      setLoggedIn(true)
+
       const { data, error } = await supabase
         .from('contracts')
         .select('*')
+        .eq('user_id', user.id)
         .order('renewal_date', { ascending: true })
 
       if (error) {
@@ -51,8 +64,14 @@ export default function Home() {
       }
     }
 
-    fetchContracts()
+    fetchAll()
   }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    alert('Déconnecté')
+    window.location.href = '/login'
+  }
 
   const totalSaving = contracts.reduce((sum, contract) => {
     return sum + getEstimatedSaving(contract.monthly_price)
@@ -71,9 +90,27 @@ export default function Home() {
         fontFamily: 'Arial, sans-serif',
       }}
     >
-      <div style={{ marginBottom: 20 }}>
-        <p style={{ color: '#666', marginBottom: 6 }}>Votre copilote d’économies</p>
-        <h1 style={{ margin: 0, fontSize: 32 }}>Bonjour 👋</h1>
+      <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <p style={{ color: '#666', marginBottom: 6 }}>Votre copilote d’économies</p>
+          <h1 style={{ margin: 0, fontSize: 32 }}>Bonjour 👋</h1>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+          {loggedIn ? (
+            <button onClick={handleLogout} style={smallButtonStyle}>
+              Déconnexion
+            </button>
+          ) : (
+            <a href="/login" style={{ ...smallButtonStyle, textDecoration: 'none', display: 'inline-block' }}>
+              Connexion
+            </a>
+          )}
+
+          <a href="/alerts" style={{ ...smallButtonStyle, textDecoration: 'none', display: 'inline-block' }}>
+            Alertes
+          </a>
+        </div>
       </div>
 
       <div
@@ -123,44 +160,21 @@ export default function Home() {
           marginBottom: 20,
         }}
       >
-        <div
-          style={{
-            background: '#fff',
-            border: '1px solid #e5e7eb',
-            borderRadius: 16,
-            padding: 14,
-          }}
-        >
-          <p style={{ margin: 0, color: '#666', fontSize: 12 }}>Contrats</p>
-          <p style={{ margin: '8px 0 0', fontSize: 22, fontWeight: 700 }}>
-            {contracts.length}
-          </p>
+        <div style={statCardStyle}>
+          <p style={statLabelStyle}>Contrats</p>
+          <p style={statValueStyle}>{contracts.length}</p>
         </div>
 
-        <div
-          style={{
-            background: '#fff',
-            border: '1px solid #e5e7eb',
-            borderRadius: 16,
-            padding: 14,
-          }}
-        >
-          <p style={{ margin: 0, color: '#666', fontSize: 12 }}>Alertes</p>
-          <p style={{ margin: '8px 0 0', fontSize: 22, fontWeight: 700 }}>
+        <div style={statCardStyle}>
+          <p style={statLabelStyle}>Alertes</p>
+          <p style={statValueStyle}>
             {contracts.filter((c) => getDaysUntil(c.renewal_date) <= 90).length}
           </p>
         </div>
 
-        <div
-          style={{
-            background: '#fff',
-            border: '1px solid #e5e7eb',
-            borderRadius: 16,
-            padding: 14,
-          }}
-        >
-          <p style={{ margin: 0, color: '#666', fontSize: 12 }}>Suivi</p>
-          <p style={{ margin: '8px 0 0', fontSize: 22, fontWeight: 700 }}>Actif</p>
+        <div style={statCardStyle}>
+          <p style={statLabelStyle}>Suivi</p>
+          <p style={statValueStyle}>Actif</p>
         </div>
       </div>
 
@@ -273,4 +287,33 @@ export default function Home() {
       </div>
     </div>
   )
+}
+
+const smallButtonStyle: React.CSSProperties = {
+  border: '1px solid #e5e7eb',
+  background: '#fff',
+  color: '#111827',
+  borderRadius: 12,
+  padding: '10px 12px',
+  fontWeight: 600,
+  cursor: 'pointer',
+}
+
+const statCardStyle: React.CSSProperties = {
+  background: '#fff',
+  border: '1px solid #e5e7eb',
+  borderRadius: 16,
+  padding: 14,
+}
+
+const statLabelStyle: React.CSSProperties = {
+  margin: 0,
+  color: '#666',
+  fontSize: 12,
+}
+
+const statValueStyle: React.CSSProperties = {
+  margin: '8px 0 0',
+  fontSize: 22,
+  fontWeight: 700,
 }
