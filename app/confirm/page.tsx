@@ -1,14 +1,15 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-export default function ConfirmPage() {
+function ConfirmContent() {
   const params = useSearchParams()
 
-  const contract = params.get('contract')
-  const currentPrice = Number(params.get('currentPrice'))
-  const offer = params.get('offer')
-  const newPrice = Number(params.get('newPrice'))
+  const contract = params.get('contract') || 'Contrat'
+  const currentPrice = Number(params.get('currentPrice') || 0)
+  const offer = params.get('offer') || 'Nouvelle offre'
+  const newPrice = Number(params.get('newPrice') || 0)
 
   const monthlySaving = currentPrice - newPrice
   const yearlySaving = monthlySaving * 12
@@ -30,6 +31,7 @@ export default function ConfirmPage() {
           style={{
             background: 'rgba(255,255,255,0.75)',
             backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             borderRadius: 28,
             padding: 24,
             boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
@@ -52,7 +54,9 @@ export default function ConfirmPage() {
         </div>
 
         <a
-          href="/success"
+          href={`/success?contract=${encodeURIComponent(
+            contract
+          )}&offer=${encodeURIComponent(offer)}&yearlySaving=${yearlySaving}`}
           className="premium-button"
           style={{
             display: 'block',
@@ -80,6 +84,14 @@ export default function ConfirmPage() {
   )
 }
 
+export default function ConfirmPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 20 }}>Chargement...</div>}>
+      <ConfirmContent />
+    </Suspense>
+  )
+}
+
 const tabBarStyle: React.CSSProperties = {
   position: 'fixed',
   left: '50%',
@@ -88,6 +100,7 @@ const tabBarStyle: React.CSSProperties = {
   width: 'min(92%, 520px)',
   background: 'rgba(255,255,255,0.8)',
   backdropFilter: 'blur(20px)',
+  WebkitBackdropFilter: 'blur(20px)',
   borderRadius: 24,
   padding: 12,
   display: 'grid',
