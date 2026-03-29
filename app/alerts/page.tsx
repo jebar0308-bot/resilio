@@ -1,174 +1,218 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
-export default function Contracts() {
-  const [name, setName] = useState('')
-  const [provider, setProvider] = useState('')
-  const [price, setPrice] = useState('')
-  const [date, setDate] = useState('')
+type Contract = {
+  id: string
+  category: string
+  provider: string
+  monthly_price: number
+  renewal_date: string
+}
 
-  const handleAdd = async () => {
-    const user = (await supabase.auth.getUser()).data.user
+function getDaysUntil(dateString: string) {
+  const today = new Date()
+  const target = new Date(dateString)
+  const diff = target.getTime() - today.getTime()
+  return Math.ceil(diff / (1000 * 60 * 60 * 24))
+}
 
-    if (!user) {
-      alert("Vous n'êtes pas connecté")
-      return
+function getStatus(days: number) {
+  if (days <= 30) return 'À optimiser'
+  if (days <= 90) return 'À surveiller'
+  return 'OK'
+}
+
+function formatDate(dateString: string) {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+export default function AlertsPage() {
+  const [contracts, setContracts] = useState<Contract[]>([])
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      const userRes = await supabase.auth.getUser()
+      const user = userRes.data.user
+
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('renewal_date', { ascending: true })
+
+      if (!error) {
+        setContracts(data || [])
+      }
     }
 
-    const { error } = await supabase.from('contracts').insert({
-      user_id: user.id,
-      category: name,
-      provider,
-      monthly_price: Number(price),
-      renewal_date: date,
-    })
+    fetchAlerts()
+  }, [])
 
-    if (error) {
-      alert(error.message)
-    } else {
-      alert('Contrat ajouté !')
-      window.location.href = '/'
-    }
-  }
+  const urgent = contracts.filter((c) => getDaysUntil(c.renewal_date) <= 30)
+  const watch = contracts.filter((c) => {
+    const days = getDaysUntil(c.renewal_date)
+    return days > 30 && days <= 90
+  })
 
   return (
     <div
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
         padding: 20,
-        fontFamily: '-apple-system, BlinkMacSystemFont, Arial, sans-serif',
+        paddingBottom: 110,
       }}
     >
-      <div
-        style={{
-          maxWidth: 520,
-          margin: '0 auto',
-        }}
-      >
-        <a href="/" style={backLinkStyle}>
+      <div style={{ maxWidth: 520, margin: '0 auto' }}>
+        <a href="/" style={{ color: '#6b7280' }}>
           ← Retour
         </a>
 
         <div style={{ marginTop: 12, marginBottom: 20 }}>
-          <p style={{ color: '#6b7280', marginBottom: 6 }}>Nouveau contrat</p>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 32,
-              lineHeight: 1.05,
-            }}
-          >
-            Ajouter un contrat
-          </h1>
+          <p style={{ color: '#6b7280' }}>Centre d’alertes</p>
+          <h1>Vos opportunités</h1>
         </div>
 
-        <div style={formCardStyle}>
-          <div style={{ marginBottom: 16 }}>
-            <p style={labelStyle}>Type de contrat</p>
-            <input
-              placeholder="Assurance auto"
-              onChange={(e) => setName(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <p style={labelStyle}>Fournisseur</p>
-            <input
-              placeholder="AXA, Orange..."
-              onChange={(e) => setProvider(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <p style={labelStyle}>Prix mensuel</p>
-            <input
-              placeholder="50"
-              onChange={(e) => setPrice(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <p style={labelStyle}>Date anniversaire</p>
-            <input
-              type="date"
-              onChange={(e) => setDate(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-
-          <div style={hintCardStyle}>
-            <p style={{ margin: 0, fontWeight: 600 }}>Surveillance automatique</p>
-            <p style={{ margin: '8px 0 0', color: '#6b7280' }}>
-              L’app vous préviendra au bon moment pour comparer et économiser.
-            </p>
-          </div>
-
-          <button onClick={handleAdd} style={primaryButtonStyle}>
-            Ajouter le contrat
-          </button>
+        <div
+          className="premium-card fade-in"
+          style={{
+            background: 'rgba(255,255,255,0.75)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 28,
+            padding: 24,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+            marginBottom: 18,
+          }}
+        >
+          <p style={{ color: '#6b7280', margin: 0 }}>Alertes actives</p>
+          <h2 style={{ fontSize: 40, margin: '10px 0 8px' }}>
+            {urgent.length + watch.length}
+          </h2>
+          <p style={{ color: '#6b7280', margin: 0 }}>
+            Contrats à surveiller ou à optimiser
+          </p>
         </div>
+
+        <Section title="Urgent" items={urgent} />
+        <Section title="À surveiller" items={watch} />
+      </div>
+
+      <div style={tabBarStyle}>
+        <a href="/" style={tabItemStyle}>
+          🏠 Accueil
+        </a>
+
+        <a href="/contracts" style={tabItemStyle}>
+          ➕ Ajouter
+        </a>
+
+        <a href="/alerts" style={tabItemActiveStyle}>
+          🔔 Alertes
+        </a>
+
+        <a href="/login" style={tabItemStyle}>
+          👤 Compte
+        </a>
       </div>
     </div>
   )
 }
 
-const backLinkStyle: React.CSSProperties = {
+function Section({
+  title,
+  items,
+}: {
+  title: string
+  items: Contract[]
+}) {
+  return (
+    <div style={{ marginTop: 24 }}>
+      <h2 style={{ marginBottom: 12 }}>{title}</h2>
+
+      {items.length === 0 ? (
+        <div
+          className="premium-card fade-in"
+          style={{
+            background: 'rgba(255,255,255,0.75)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 24,
+            padding: 20,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+            color: '#6b7280',
+          }}
+        >
+          Rien ici pour le moment.
+        </div>
+      ) : (
+        items.map((contract) => {
+          const days = getDaysUntil(contract.renewal_date)
+          const status = getStatus(days)
+
+          return (
+            <a
+              key={contract.id}
+              href={`/compare/${contract.id}`}
+              style={{ textDecoration: 'none', color: 'inherit' }}
+            >
+              <div
+                className="premium-card fade-in"
+                style={{
+                  background: 'rgba(255,255,255,0.75)',
+                  backdropFilter: 'blur(20px)',
+                  borderRadius: 24,
+                  padding: 20,
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+                  marginBottom: 12,
+                }}
+              >
+                <h3 style={{ margin: 0 }}>{contract.category}</h3>
+                <p style={{ color: '#6b7280', margin: '8px 0 0' }}>
+                  {contract.provider}
+                </p>
+                <p style={{ margin: '10px 0 0', fontWeight: 700 }}>{status}</p>
+                <p style={{ color: '#6b7280', margin: '8px 0 0' }}>
+                  {formatDate(contract.renewal_date)}
+                </p>
+              </div>
+            </a>
+          )
+        })
+      )}
+    </div>
+  )
+}
+
+const tabBarStyle: React.CSSProperties = {
+  position: 'fixed',
+  left: '50%',
+  bottom: 16,
+  transform: 'translateX(-50%)',
+  width: 'min(92%, 520px)',
+  background: 'rgba(255,255,255,0.8)',
+  backdropFilter: 'blur(20px)',
+  borderRadius: 24,
+  padding: 12,
+  display: 'grid',
+  gridTemplateColumns: 'repeat(4, 1fr)',
+  textAlign: 'center',
+}
+
+const tabItemStyle: React.CSSProperties = {
+  color: '#64748b',
   textDecoration: 'none',
-  color: '#6b7280',
-  display: 'inline-block',
+  fontWeight: 600,
 }
 
-const formCardStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.72)',
-  backdropFilter: 'blur(18px)',
-  WebkitBackdropFilter: 'blur(18px)',
-  border: '1px solid rgba(255,255,255,0.7)',
-  borderRadius: 28,
-  padding: 24,
-  boxShadow: '0 12px 40px rgba(0,0,0,0.08)',
-}
-
-const labelStyle: React.CSSProperties = {
-  marginBottom: 8,
-  fontSize: 14,
-  color: '#6b7280',
-}
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '13px 14px',
-  borderRadius: 16,
-  border: '1px solid #e5e7eb',
-  background: 'rgba(255,255,255,0.9)',
-  fontSize: 14,
-  outline: 'none',
-  boxSizing: 'border-box',
-}
-
-const hintCardStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.85)',
-  border: '1px solid #e5e7eb',
-  borderRadius: 20,
-  padding: 16,
-  marginTop: 8,
-  marginBottom: 18,
-}
-
-const primaryButtonStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '15px',
-  borderRadius: 16,
-  border: 'none',
-  background: '#111827',
-  color: 'white',
+const tabItemActiveStyle: React.CSSProperties = {
+  ...tabItemStyle,
+  color: '#111827',
   fontWeight: 700,
-  fontSize: 16,
-  cursor: 'pointer',
-  boxShadow: '0 8px 20px rgba(17,24,39,0.18)',
 }
