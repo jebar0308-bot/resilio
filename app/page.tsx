@@ -124,7 +124,7 @@ export default function Home() {
           </div>
 
           {loggedIn && (
-            <button onClick={handleLogout} style={smallButton}>
+            <button onClick={handleLogout} style={smallButton} className="premium-button">
               Déconnexion
             </button>
           )}
@@ -132,8 +132,9 @@ export default function Home() {
 
         {/* HERO CARD */}
         <div
-          style={{
-            position: 'relative',
+  className="premium-card fade-in"
+  style={{
+    position: 'relative',
             background: 'rgba(255,255,255,0.75)',
             backdropFilter: 'blur(20px)',
             borderRadius: 28,
@@ -165,8 +166,9 @@ export default function Home() {
 
             {nextAction && (
               <a
-                href={`/compare/${nextAction.id}`}
-                style={{
+  href={`/compare/${nextAction.id}`}
+  className="premium-button"
+  style={{
                   display: 'inline-block',
                   marginTop: 12,
                   padding: '14px 20px',
@@ -196,8 +198,9 @@ export default function Home() {
             return (
               <a key={c.id} href={`/compare/${c.id}`}>
                 <div
-                  style={{
-                    padding: 20,
+  className="premium-card fade-in"
+  style={{
+    padding: 20,
                     borderRadius: 20,
                     background: 'rgba(255,255,255,0.75)',
                     boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
