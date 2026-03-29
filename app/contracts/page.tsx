@@ -37,142 +37,129 @@ export default function Contracts() {
     <div
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
         padding: 20,
-        fontFamily: '-apple-system, BlinkMacSystemFont, Arial, sans-serif',
+        paddingBottom: 110,
       }}
     >
-      <div
-        style={{
-          maxWidth: 520,
-          margin: '0 auto',
-        }}
-      >
-        <a href="/" style={backLinkStyle}>
+      <div style={{ maxWidth: 520, margin: '0 auto' }}>
+        
+        <a href="/" style={{ color: '#6b7280' }}>
           ← Retour
         </a>
 
         <div style={{ marginTop: 12, marginBottom: 20 }}>
-          <p style={{ color: '#6b7280', marginBottom: 6 }}>Nouveau contrat</p>
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 32,
-              lineHeight: 1.05,
-            }}
-          >
-            Ajouter un contrat
-          </h1>
+          <p style={{ color: '#6b7280' }}>Nouveau contrat</p>
+          <h1>Ajouter un contrat</h1>
         </div>
 
-        <div style={formCardStyle}>
-          <div style={{ marginBottom: 16 }}>
-            <p style={labelStyle}>Type de contrat</p>
-            <input
-              placeholder="Assurance auto"
-              onChange={(e) => setName(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
+        <div
+          className="premium-card fade-in"
+          style={{
+            background: 'rgba(255,255,255,0.75)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 28,
+            padding: 24,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+          }}
+        >
+          <input
+            placeholder="Type (Assurance auto)"
+            onChange={(e) => setName(e.target.value)}
+            style={inputStyle}
+          />
 
-          <div style={{ marginBottom: 16 }}>
-            <p style={labelStyle}>Fournisseur</p>
-            <input
-              placeholder="AXA, Orange..."
-              onChange={(e) => setProvider(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
+          <input
+            placeholder="Fournisseur"
+            onChange={(e) => setProvider(e.target.value)}
+            style={inputStyle}
+          />
 
-          <div style={{ marginBottom: 16 }}>
-            <p style={labelStyle}>Prix mensuel</p>
-            <input
-              placeholder="50"
-              onChange={(e) => setPrice(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
+          <input
+            placeholder="Prix mensuel"
+            onChange={(e) => setPrice(e.target.value)}
+            style={inputStyle}
+          />
 
-          <div style={{ marginBottom: 16 }}>
-            <p style={labelStyle}>Date anniversaire</p>
-            <input
-              type="date"
-              onChange={(e) => setDate(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
+          <input
+            type="date"
+            onChange={(e) => setDate(e.target.value)}
+            style={inputStyle}
+          />
 
-          <div style={hintCardStyle}>
-            <p style={{ margin: 0, fontWeight: 600 }}>Surveillance automatique</p>
-            <p style={{ margin: '8px 0 0', color: '#6b7280' }}>
-              L’app vous préviendra au bon moment pour comparer et économiser.
-            </p>
-          </div>
-
-          <button onClick={handleAdd} style={primaryButtonStyle}>
+          <button
+            onClick={handleAdd}
+            style={buttonStyle}
+            className="premium-button"
+          >
             Ajouter le contrat
           </button>
         </div>
+      </div>
+
+      {/* TAB BAR */}
+      <div style={tabBarStyle}>
+        <a href="/" style={tabItemStyle}>
+          🏠 Accueil
+        </a>
+
+        <a href="/contracts" style={tabItemActiveStyle}>
+          ➕ Ajouter
+        </a>
+
+        <a href="/alerts" style={tabItemStyle}>
+          🔔 Alertes
+        </a>
+
+        <a href="/login" style={tabItemStyle}>
+          👤 Compte
+        </a>
       </div>
     </div>
   )
 }
 
-const backLinkStyle: React.CSSProperties = {
-  textDecoration: 'none',
-  color: '#6b7280',
-  display: 'inline-block',
-}
-
-const formCardStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.72)',
-  backdropFilter: 'blur(18px)',
-  WebkitBackdropFilter: 'blur(18px)',
-  border: '1px solid rgba(255,255,255,0.7)',
-  borderRadius: 28,
-  padding: 24,
-  boxShadow: '0 12px 40px rgba(0,0,0,0.08)',
-}
-
-const labelStyle: React.CSSProperties = {
-  marginBottom: 8,
-  fontSize: 14,
-  color: '#6b7280',
-}
-
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  padding: '15px 16px',
-  borderRadius: 18,
-  border: '1px solid rgba(15,23,42,0.08)',
-  background: 'rgba(255,255,255,0.88)',
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 6px 16px rgba(15,23,42,0.04)',
-  fontSize: 15,
-  outline: 'none',
-  boxSizing: 'border-box',
-  color: '#0f172a',
+  padding: 14,
+  borderRadius: 16,
+  border: '1px solid #e5e7eb',
+  marginBottom: 12,
 }
 
-const hintCardStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.72)',
-  border: '1px solid rgba(255,255,255,0.7)',
-  borderRadius: 22,
-  padding: 18,
-  marginTop: 10,
-  marginBottom: 18,
-  boxShadow: '0 10px 24px rgba(15,23,42,0.05)',
-}
-
-const primaryButtonStyle: React.CSSProperties = {
+const buttonStyle: React.CSSProperties = {
   width: '100%',
-  padding: '16px',
+  padding: 16,
   borderRadius: 18,
-  border: '1px solid rgba(15,23,42,0.06)',
-  background: 'linear-gradient(180deg, #111827 0%, #0f172a 100%)',
+  border: 'none',
+  background: 'linear-gradient(135deg, #6366f1, #10b981)',
   color: 'white',
   fontWeight: 700,
-  fontSize: 16,
-  cursor: 'pointer',
-  boxShadow: '0 12px 28px rgba(15,23,42,0.22)',
-  letterSpacing: '-0.01em',
+  marginTop: 10,
+}
+
+const tabBarStyle: React.CSSProperties = {
+  position: 'fixed',
+  left: '50%',
+  bottom: 16,
+  transform: 'translateX(-50%)',
+  width: 'min(92%, 520px)',
+  background: 'rgba(255,255,255,0.8)',
+  backdropFilter: 'blur(20px)',
+  borderRadius: 24,
+  padding: 12,
+  display: 'grid',
+  gridTemplateColumns: 'repeat(4, 1fr)',
+  textAlign: 'center',
+}
+
+const tabItemStyle: React.CSSProperties = {
+  color: '#64748b',
+  textDecoration: 'none',
+  fontWeight: 600,
+}
+
+const tabItemActiveStyle: React.CSSProperties = {
+  ...tabItemStyle,
+  color: '#111827',
+  fontWeight: 700,
 }
