@@ -107,13 +107,14 @@ export default function Home() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        padding: 20,
-        fontFamily: '-apple-system, BlinkMacSystemFont, Arial',
-      }}
-    >
+  <div
+    style={{
+      minHeight: '100vh',
+      padding: 20,
+      paddingBottom: 110,
+      fontFamily: '-apple-system, BlinkMacSystemFont, Arial',
+    }}
+  >
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
         
         {/* HEADER */}
@@ -226,6 +227,46 @@ export default function Home() {
               </a>
             )
           })}
+                <div
+        style={{
+          position: 'fixed',
+          left: '50%',
+          bottom: 16,
+          transform: 'translateX(-50%)',
+          width: 'min(92%, 520px)',
+          background: 'rgba(255,255,255,0.78)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.7)',
+          borderRadius: 24,
+          padding: '10px 12px',
+          boxShadow: '0 18px 40px rgba(15,23,42,0.14)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 8,
+          zIndex: 100,
+        }}
+      >
+        <a href="/" style={tabItemActiveStyle}>
+          <span style={tabIconStyle}>🏠</span>
+          <span>Accueil</span>
+        </a>
+
+        <a href="/contracts" style={tabItemStyle}>
+          <span style={tabIconStyle}>➕</span>
+          <span>Ajouter</span>
+        </a>
+
+        <a href="/alerts" style={tabItemStyle}>
+          <span style={tabIconStyle}>🔔</span>
+          <span>Alertes</span>
+        </a>
+
+        <a href="/login" style={tabItemStyle}>
+          <span style={tabIconStyle}>👤</span>
+          <span>Compte</span>
+        </a>
+      </div>
         </div>
       </div>
     </div>
