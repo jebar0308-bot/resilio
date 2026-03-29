@@ -16,10 +16,10 @@ type Offer = {
   name: string
   price: number
   badge: string
-  accent: string
+  tone: string
 }
 
-export default function Compare() {
+export default function ComparePage() {
   const { id } = useParams()
   const [contract, setContract] = useState<Contract | null>(null)
 
@@ -39,7 +39,7 @@ export default function Compare() {
 
   if (!contract) {
     return (
-      <div style={pageStyle}>
+      <div style={{ minHeight: '100vh', padding: 20, paddingBottom: 110 }}>
         <div style={{ maxWidth: 520, margin: '0 auto' }}>
           <p>Chargement...</p>
         </div>
@@ -52,60 +52,95 @@ export default function Compare() {
       name: 'Assuréo',
       price: Math.max(contract.monthly_price - 15, 5),
       badge: '🔥 Meilleur choix',
-      accent: '#ecfdf5',
+      tone: 'linear-gradient(135deg, rgba(99,102,241,0.14), rgba(16,185,129,0.14))',
     },
     {
       name: 'ZenCover',
       price: Math.max(contract.monthly_price - 10, 5),
       badge: '⭐ Populaire',
-      accent: '#eff6ff',
+      tone: 'linear-gradient(135deg, rgba(59,130,246,0.12), rgba(14,165,233,0.12))',
     },
     {
       name: 'Protect+',
       price: Math.max(contract.monthly_price - 7, 5),
       badge: '⚡ Rapide',
-      accent: '#fff7ed',
+      tone: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(249,115,22,0.10))',
     },
   ]
 
   return (
-    <div style={pageStyle}>
+    <div
+      style={{
+        minHeight: '100vh',
+        padding: 20,
+        paddingBottom: 110,
+      }}
+    >
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
-        <a href="/" style={backLinkStyle}>
+        <a href="/" style={{ color: '#6b7280' }}>
           ← Retour
         </a>
 
         <div style={{ marginTop: 12, marginBottom: 20 }}>
-          <p style={{ color: '#6b7280', marginBottom: 6 }}>Comparateur intelligent</p>
-          <h1
+          <p style={{ color: '#6b7280' }}>Comparateur intelligent</p>
+          <h1>Optimiser {contract.category}</h1>
+        </div>
+
+        <div
+          className="premium-card fade-in"
+          style={{
+            position: 'relative',
+            background: 'rgba(255,255,255,0.75)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 28,
+            padding: 24,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+            marginBottom: 18,
+            overflow: 'hidden',
+          }}
+        >
+          <div
             style={{
-              margin: 0,
-              fontSize: 32,
-              lineHeight: 1.05,
+              position: 'absolute',
+              top: -30,
+              right: -20,
+              width: 140,
+              height: 140,
+              background:
+                'radial-gradient(circle, rgba(16,185,129,0.20), transparent 70%)',
+              filter: 'blur(34px)',
+              pointerEvents: 'none',
             }}
-          >
-            Optimiser {contract.category}
-          </h1>
+          />
+
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <p style={{ color: '#6b7280', margin: 0 }}>Contrat actuel</p>
+            <h2 style={{ margin: '10px 0 8px' }}>{contract.provider}</h2>
+            <p style={{ margin: 0, color: '#374151' }}>
+              {contract.monthly_price}€/mois
+            </p>
+          </div>
         </div>
 
-        <div style={heroCardStyle}>
-          <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>Contrat actuel</p>
-          <h2 style={{ marginTop: 10, marginBottom: 8 }}>{contract.provider}</h2>
-          <p style={{ margin: 0, color: '#374151' }}>{contract.monthly_price}€/mois</p>
-        </div>
-
-        <div style={{ display: 'grid', gap: 14, marginTop: 20 }}>
-          {offers.map((offer, index) => {
+        <div style={{ display: 'grid', gap: 14 }}>
+          {offers.map((offer) => {
             const monthlySaving = contract.monthly_price - offer.price
             const yearlySaving = monthlySaving * 12
 
             return (
               <div
                 key={offer.name}
+                className="premium-card fade-in"
                 style={{
-                  ...offerCardStyle,
-                  border: index === 0 ? '2px solid #111827' : '1px solid rgba(255,255,255,0.7)',
-                  background: offer.accent,
+                  background: offer.tone,
+                  backdropFilter: 'blur(20px)',
+                  borderRadius: 24,
+                  padding: 20,
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+                  border:
+                    offer.badge === '🔥 Meilleur choix'
+                      ? '1.5px solid rgba(99,102,241,0.35)'
+                      : '1px solid rgba(255,255,255,0.7)',
                 }}
               >
                 <div
@@ -117,135 +152,138 @@ export default function Compare() {
                   }}
                 >
                   <div>
-                    <span style={badgeStyle}>{offer.badge}</span>
-                    <h3 style={{ marginTop: 12, marginBottom: 6 }}>{offer.name}</h3>
-                    <p style={{ margin: 0, color: '#6b7280' }}>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        background: 'rgba(255,255,255,0.82)',
+                        padding: '7px 11px',
+                        borderRadius: 999,
+                        fontSize: 12,
+                        fontWeight: 800,
+                      }}
+                    >
+                      {offer.badge}
+                    </span>
+                    <h3 style={{ margin: '12px 0 6px' }}>{offer.name}</h3>
+                    <p style={{ color: '#6b7280', margin: 0 }}>
                       Nouveau prix recommandé
                     </p>
                   </div>
 
                   <div style={{ textAlign: 'right' }}>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: 30,
-                        fontWeight: 700,
-                      }}
-                    >
+                    <p style={{ margin: 0, fontSize: 30, fontWeight: 700 }}>
                       {offer.price}€
                     </p>
                     <p style={{ margin: 0, color: '#6b7280' }}>/mois</p>
                   </div>
                 </div>
 
-                <div style={statsGridStyle}>
-                  <div style={miniStatStyle}>
-                    <p style={miniLabelStyle}>Économie / mois</p>
-                    <p style={miniValueStyle}>{monthlySaving}€</p>
+                <div
+                  style={{
+                    marginTop: 18,
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      background: 'rgba(255,255,255,0.82)',
+                      borderRadius: 18,
+                      padding: 14,
+                    }}
+                  >
+                    <p style={{ margin: 0, fontSize: 12, color: '#6b7280' }}>
+                      Économie / mois
+                    </p>
+                    <p style={{ margin: '6px 0 0', fontSize: 22, fontWeight: 700 }}>
+                      {monthlySaving}€
+                    </p>
                   </div>
 
-                  <div style={miniStatStyle}>
-                    <p style={miniLabelStyle}>Économie / an</p>
-                    <p style={miniValueStyle}>{yearlySaving}€</p>
+                  <div
+                    style={{
+                      background: 'rgba(255,255,255,0.82)',
+                      borderRadius: 18,
+                      padding: 14,
+                    }}
+                  >
+                    <p style={{ margin: 0, fontSize: 12, color: '#6b7280' }}>
+                      Économie / an
+                    </p>
+                    <p style={{ margin: '6px 0 0', fontSize: 22, fontWeight: 700 }}>
+                      {yearlySaving}€
+                    </p>
                   </div>
                 </div>
 
                 <a
-                  href={`/confirm?contract=${encodeURIComponent(contract.category)}&currentPrice=${contract.monthly_price}&offer=${encodeURIComponent(offer.name)}&newPrice=${offer.price}`}
-                  style={{ textDecoration: 'none' }}
+                  href={`/confirm?contract=${encodeURIComponent(
+                    contract.category
+                  )}&currentPrice=${contract.monthly_price}&offer=${encodeURIComponent(
+                    offer.name
+                  )}&newPrice=${offer.price}`}
+                  className="premium-button"
+                  style={{
+                    display: 'block',
+                    marginTop: 18,
+                    padding: '16px',
+                    borderRadius: 18,
+                    background:
+                      'linear-gradient(135deg, #6366f1 0%, #10b981 100%)',
+                    color: 'white',
+                    textDecoration: 'none',
+                    fontWeight: 700,
+                    textAlign: 'center',
+                    boxShadow: '0 12px 30px rgba(99,102,241,0.30)',
+                  }}
                 >
-                  <button style={primaryButtonStyle}>
-                    Choisir cette offre
-                  </button>
+                  Choisir cette offre
                 </a>
               </div>
             )
           })}
         </div>
       </div>
+
+      <div style={tabBarStyle}>
+        <a href="/" style={tabItemStyle}>
+          🏠 Accueil
+        </a>
+
+        <a href="/contracts" style={tabItemStyle}>
+          ➕ Ajouter
+        </a>
+
+        <a href="/alerts" style={tabItemStyle}>
+          🔔 Alertes
+        </a>
+
+        <a href="/login" style={tabItemStyle}>
+          👤 Compte
+        </a>
+      </div>
     </div>
   )
 }
 
-const pageStyle: React.CSSProperties = {
-  minHeight: '100vh',
-  background: 'linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
-  padding: 20,
-  fontFamily: '-apple-system, BlinkMacSystemFont, Arial, sans-serif',
-}
-
-const backLinkStyle: React.CSSProperties = {
-  textDecoration: 'none',
-  color: '#6b7280',
-  display: 'inline-block',
-}
-
-const heroCardStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.72)',
-  backdropFilter: 'blur(18px)',
-  WebkitBackdropFilter: 'blur(18px)',
-  border: '1px solid rgba(255,255,255,0.7)',
-  borderRadius: 28,
-  padding: 24,
-  boxShadow: '0 12px 40px rgba(0,0,0,0.08)',
-}
-
-const offerCardStyle: React.CSSProperties = {
-  backdropFilter: 'blur(18px)',
-  WebkitBackdropFilter: 'blur(18px)',
+const tabBarStyle: React.CSSProperties = {
+  position: 'fixed',
+  left: '50%',
+  bottom: 16,
+  transform: 'translateX(-50%)',
+  width: 'min(92%, 520px)',
+  background: 'rgba(255,255,255,0.8)',
+  backdropFilter: 'blur(20px)',
   borderRadius: 24,
-  padding: 20,
-  boxShadow: '0 10px 28px rgba(0,0,0,0.06)',
-}
-
-const badgeStyle: React.CSSProperties = {
-  display: 'inline-block',
-  padding: '7px 11px',
-  borderRadius: 999,
-  background: 'rgba(255,255,255,0.88)',
-  fontSize: 12,
-  fontWeight: 800,
-  letterSpacing: '-0.01em',
-  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.45)',
-}
-
-const statsGridStyle: React.CSSProperties = {
-  marginTop: 18,
+  padding: 12,
   display: 'grid',
-  gridTemplateColumns: 'repeat(2, 1fr)',
-  gap: 12,
+  gridTemplateColumns: 'repeat(4, 1fr)',
+  textAlign: 'center',
 }
 
-const miniStatStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.85)',
-  border: '1px solid #e5e7eb',
-  borderRadius: 16,
-  padding: 14,
-}
-
-const miniLabelStyle: React.CSSProperties = {
-  margin: 0,
-  fontSize: 12,
-  color: '#6b7280',
-}
-
-const miniValueStyle: React.CSSProperties = {
-  margin: '6px 0 0',
-  fontSize: 22,
-  fontWeight: 700,
-}
-
-const primaryButtonStyle: React.CSSProperties = {
-  width: '100%',
-  marginTop: 18,
-  padding: '16px',
-  borderRadius: 18,
-  border: '1px solid rgba(15,23,42,0.06)',
-  background: 'linear-gradient(180deg, #111827 0%, #0f172a 100%)',
-  color: 'white',
-  fontWeight: 700,
-  fontSize: 16,
-  cursor: 'pointer',
-  letterSpacing: '-0.01em',
-  boxShadow: '0 12px 28px rgba(15,23,42,0.22)',
+const tabItemStyle: React.CSSProperties = {
+  color: '#64748b',
+  textDecoration: 'none',
+  fontWeight: 600,
 }
