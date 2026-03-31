@@ -22,6 +22,7 @@ type Offer = {
 export default function ComparePage() {
   const { id } = useParams()
   const [contract, setContract] = useState<Contract | null>(null)
+  const [loadingOffer, setLoadingOffer] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchContract = async () => {
@@ -36,6 +37,40 @@ export default function ComparePage() {
 
     fetchContract()
   }, [id])
+
+  const handleChooseOffer = async (offer: Offer) => {
+    if (!contract) return
+
+    const userRes = await supabase.auth.getUser()
+    const user = userRes.data.user
+
+    if (!user) {
+      window.location.href = '/login'
+      return
+    }
+
+    setLoadingOffer(offer.name)
+
+    const { error } = await supabase.from('partner_clicks').insert({
+      user_id: user.id,
+      contract_id: contract.id,
+      offer_name: offer.name,
+      current_price: contract.monthly_price,
+      offered_price: offer.price,
+    })
+
+    if (error) {
+      alert(error.message)
+      setLoadingOffer(null)
+      return
+    }
+
+    window.location.href = `/confirm?contract=${encodeURIComponent(
+      contract.category
+    )}&currentPrice=${contract.monthly_price}&offer=${encodeURIComponent(
+      offer.name
+    )}&newPrice=${offer.price}`
+  }
 
   if (!contract) {
     return (
@@ -217,29 +252,29 @@ export default function ComparePage() {
                   </div>
                 </div>
 
-                <a
-                  href={`/confirm?contract=${encodeURIComponent(
-                    contract.category
-                  )}&currentPrice=${contract.monthly_price}&offer=${encodeURIComponent(
-                    offer.name
-                  )}&newPrice=${offer.price}`}
+                <button
+                  onClick={() => handleChooseOffer(offer)}
+                  disabled={loadingOffer === offer.name}
                   className="premium-button"
                   style={{
                     display: 'block',
+                    width: '100%',
                     marginTop: 18,
                     padding: '16px',
                     borderRadius: 18,
                     background:
                       'linear-gradient(135deg, #6366f1 0%, #10b981 100%)',
                     color: 'white',
-                    textDecoration: 'none',
+                    border: 'none',
                     fontWeight: 700,
                     textAlign: 'center',
                     boxShadow: '0 12px 30px rgba(99,102,241,0.30)',
+                    cursor: 'pointer',
+                    opacity: loadingOffer === offer.name ? 0.7 : 1,
                   }}
                 >
-                  Choisir cette offre
-                </a>
+                  {loadingOffer === offer.name ? 'Enregistrement...' : 'Choisir cette offre'}
+                </button>
               </div>
             )
           })}
