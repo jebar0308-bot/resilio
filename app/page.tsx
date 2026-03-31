@@ -60,11 +60,9 @@ export default function Home() {
         const user = userRes.data.user
 
         if (!user) {
-          setLoggedIn(false)
-          setContracts([])
-          setLoading(false)
-          return
-        }
+  window.location.href = '/login'
+  return
+}
 
         setLoggedIn(true)
 
