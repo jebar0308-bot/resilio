@@ -155,6 +155,17 @@ export default function Home() {
               alignItems: 'flex-end',
             }}
           >
+            <a
+  href="/admin"
+  style={{
+    ...smallButtonStyle,
+    textDecoration: 'none',
+    display: 'inline-block',
+  }}
+  className="premium-button"
+>
+  Admin
+</a>
             {loggedIn ? (
               <button
                 onClick={handleLogout}
