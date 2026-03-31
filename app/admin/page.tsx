@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 
 type Click = {
@@ -10,6 +10,8 @@ type Click = {
   offered_price: number
   created_at: string
 }
+
+const ESTIMATED_REVENUE_PER_CLICK = 8
 
 export default function AdminPage() {
   const [clicks, setClicks] = useState<Click[]>([])
@@ -42,10 +44,26 @@ export default function AdminPage() {
 
   const totalClicks = clicks.length
 
+  const estimatedRevenue = useMemo(() => {
+    return totalClicks * ESTIMATED_REVENUE_PER_CLICK
+  }, [totalClicks])
+
+  const bestOffers = useMemo(() => {
+    const counts: Record<string, number> = {}
+
+    clicks.forEach((click) => {
+      counts[click.offer_name] = (counts[click.offer_name] || 0) + 1
+    })
+
+    return Object.entries(counts)
+      .map(([offer, count]) => ({ offer, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3)
+  }, [clicks])
+
   return (
     <div style={{ minHeight: '100vh', padding: 20, paddingBottom: 110 }}>
       <div style={{ maxWidth: 520, margin: '0 auto' }}>
-        
         <a href="/" style={{ color: '#6b7280' }}>
           ← Retour
         </a>
@@ -55,31 +73,63 @@ export default function AdminPage() {
           <h1>Leads générés</h1>
         </div>
 
-        {/* KPI */}
         <div
-          className="premium-card fade-in"
           style={{
-            background: 'rgba(255,255,255,0.75)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: 28,
-            padding: 24,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.1)',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 12,
             marginBottom: 20,
           }}
         >
-          <p style={{ color: '#6b7280', margin: 0 }}>
-            Total clics
-          </p>
-          <h2 style={{ fontSize: 42, margin: '10px 0 0' }}>
-            {loading ? '...' : totalClicks}
-          </h2>
+          <div style={kpiCardStyle} className="premium-card fade-in">
+            <p style={kpiLabelStyle}>Total clics</p>
+            <h2 style={kpiValueStyle}>{loading ? '...' : totalClicks}</h2>
+          </div>
+
+          <div style={kpiCardStyle} className="premium-card fade-in">
+            <p style={kpiLabelStyle}>Revenu estimé</p>
+            <h2 style={kpiValueStyle}>{loading ? '...' : `${estimatedRevenue}€`}</h2>
+          </div>
         </div>
 
-        {/* LISTE */}
+        <div
+          style={{
+            background: 'rgba(255,255,255,0.75)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 24,
+            padding: 18,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+            marginBottom: 20,
+          }}
+          className="premium-card fade-in"
+        >
+          <h3 style={{ marginTop: 0 }}>Top offres</h3>
+
+          {bestOffers.length === 0 ? (
+            <p style={{ color: '#6b7280', marginBottom: 0 }}>
+              Pas encore assez de données.
+            </p>
+          ) : (
+            bestOffers.map((item) => (
+              <div
+                key={item.offer}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '10px 0',
+                  borderBottom: '1px solid rgba(15,23,42,0.06)',
+                }}
+              >
+                <span>{item.offer}</span>
+                <strong>{item.count} clics</strong>
+              </div>
+            ))
+          )}
+        </div>
+
         <div style={{ display: 'grid', gap: 12 }}>
           {clicks.map((c) => {
-            const saving =
-              (c.current_price - c.offered_price) * 12
+            const saving = (c.current_price - c.offered_price) * 12
 
             return (
               <div
@@ -104,7 +154,7 @@ export default function AdminPage() {
                 </p>
 
                 <p style={{ marginTop: 8, fontSize: 12, color: '#9ca3af' }}>
-                  {new Date(c.created_at).toLocaleString()}
+                  {new Date(c.created_at).toLocaleString('fr-FR')}
                 </p>
               </div>
             )
@@ -112,7 +162,6 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* TAB BAR */}
       <div style={tabBarStyle}>
         <a href="/" style={tabItemStyle}>🏠 Accueil</a>
         <a href="/contracts" style={tabItemStyle}>➕ Ajouter</a>
@@ -121,6 +170,25 @@ export default function AdminPage() {
       </div>
     </div>
   )
+}
+
+const kpiCardStyle: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.75)',
+  backdropFilter: 'blur(20px)',
+  borderRadius: 24,
+  padding: 18,
+  boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+}
+
+const kpiLabelStyle: React.CSSProperties = {
+  margin: 0,
+  color: '#6b7280',
+  fontSize: 13,
+}
+
+const kpiValueStyle: React.CSSProperties = {
+  margin: '10px 0 0',
+  fontSize: 34,
 }
 
 const tabBarStyle: React.CSSProperties = {
